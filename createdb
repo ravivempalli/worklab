@@ -1,0 +1,39 @@
+#!/bin/bash
+## create a database - generate a random password for localhost user and give permissions
+## echo the password generated and store in a file
+
+genpasswd() {
+	local l=$1
+       	[ "$l" == "" ] && l=16
+      	tr -dc A-Za-z0-9_ < /dev/urandom | head -c ${l} | xargs
+}
+
+if [ "$1" = "" ];  then
+echo "Usage : $0 <dbaame>"
+exit
+fi
+
+
+MYSQL=/usr/bin/mysql
+
+mysqlrootpasswd='s!LCdbhf@#$%^@#$@!#'
+
+dbname=$1
+dbuser=$1
+dbhost=localhost
+dbpasswd=`genpasswd`
+
+$MYSQL -u root -p${mysqlrootpasswd} -v << EOF
+create database $dbname;
+grant all on $dbname.* to $dbuser@$dbhost identified by "$dbpasswd";
+EOF
+
+mkdir -p ~/dbaccess
+cat << EOF > ~/dbaccess/$dbname.txt
+dbname=$dbname
+dbuser=$dbuser
+dbhost=$dbhost
+dbpasswd=$dbpasswd
+EOF
+
+sudo cp ~/dbaccess/$dbname.txt ~$dbname/dbaccess.txt
